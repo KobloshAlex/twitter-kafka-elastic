@@ -24,18 +24,19 @@ import java.util.concurrent.TimeUnit;
 public class TwitterProducer {
 
   private static final Logger logger = LoggerFactory.getLogger(TwitterProducer.class.getName());
+  public static final String TWITTER_TOPIC_NAME = "twitter_tweets";
+  public static final String CLIENT_LOGGING_NAME = "Twitter-producer-client";
 
-  List<String> terms = Lists.newArrayList("bitcoin");
+  final List<String> terms = Lists.newArrayList("bitcoin");
 
   public void run() {
-    final BlockingQueue<String> msgQueue = new LinkedBlockingQueue<>(1000);
+    final BlockingQueue<String> msgQueue = new LinkedBlockingQueue<>(10000000);
 
     final Client client = createTwitterClint(msgQueue);
 
     client.connect();
 
     try (KafkaProducer<String, String> producer = new Producer().createKafkaProducer()) {
-
       Runtime.getRuntime()
           .addShutdownHook(
               new Thread(
@@ -56,11 +57,9 @@ public class TwitterProducer {
           client.stop();
         }
         if (msg != null) {
-          final String[] array = msg.split(",");
-          final String message = array[0] + " - " + array[3];
-          logger.info(message);
+          logger.info(msg);
           producer.send(
-              new ProducerRecord<>("twitter_tweets", null, message),
+              new ProducerRecord<>(TWITTER_TOPIC_NAME, null, msg),
               (recordMetadata, e) -> {
                 if (e != null) {
                   logger.error(e.toString());
@@ -74,12 +73,12 @@ public class TwitterProducer {
 
   private Client createTwitterClint(BlockingQueue<String> msgQueue) {
 
-    final Hosts hosebirdHosts = new HttpHosts(Constants.STREAM_HOST);
-    final StatusesFilterEndpoint hosebirdEndpoint = new StatusesFilterEndpoint();
+    final Hosts hosts = new HttpHosts(Constants.STREAM_HOST);
+    final StatusesFilterEndpoint endpoint = new StatusesFilterEndpoint();
 
-    hosebirdEndpoint.trackTerms(terms);
+    endpoint.trackTerms(terms);
 
-    final Authentication hosebirdAuth =
+    final Authentication auth =
         new OAuth1(
             TwitterKeys.API_KEY.getValue(),
             TwitterKeys.API_SECRET_KEY.getValue(),
@@ -88,10 +87,10 @@ public class TwitterProducer {
 
     final ClientBuilder builder =
         new ClientBuilder()
-            .name("Hosebird-Client-012")
-            .hosts(hosebirdHosts)
-            .authentication(hosebirdAuth)
-            .endpoint(hosebirdEndpoint)
+            .name(CLIENT_LOGGING_NAME)
+            .hosts(hosts)
+            .authentication(auth)
+            .endpoint(endpoint)
             .processor(new StringDelimitedProcessor(msgQueue));
 
     return builder.build();
