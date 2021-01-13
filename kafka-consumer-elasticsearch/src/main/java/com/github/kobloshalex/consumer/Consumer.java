@@ -8,9 +8,10 @@ import java.util.Collections;
 import java.util.Properties;
 
 public class Consumer {
+  private Consumer() {}
+
   public static final String BOOTSTRAP_SERVER = "127.0.0.1:9092";
   public static final String GROUP_ID = "kafka-demo-elasticsearch";
-  public static final String TOPIC = "second-topic";
 
   public static KafkaConsumer<String, String> createConsumer(String topic) {
     Properties properties = new Properties();
