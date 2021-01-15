@@ -14,8 +14,7 @@ public class Consumer {
   public static final String GROUP_ID = "kafka-demo-elasticsearch";
 
   public static KafkaConsumer<String, String> createConsumer(String topic) {
-    Properties properties = new Properties();
-    properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
+    Properties properties = new Properties();    properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVER);
     properties.setProperty(
         ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
     properties.setProperty(
